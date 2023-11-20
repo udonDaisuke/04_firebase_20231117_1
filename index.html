@@ -47,15 +47,8 @@
         import { getDatabase, ref, push, set, onChildAdded, remove, onChildRemoved }
             from "https://www.gstatic.com/firebasejs/9.1.0/firebase-database.js";
         // Your web app's Firebase configuration
-        const firebaseConfig = {
-        apiKey: "",
-        authDomain: "",
-        databaseURL: "",
-        projectId: "",
-        storageBucket: "",
-        messagingSenderId: "",
-        appId: ""
-        };
+        import {firebaseConfig} from "./setting/firebase_api.js"
+        console.log("ddd",firebaseConfig)
         // Initialize Firebase
         const app = initializeApp(firebaseConfig);
         const db = getDatabase(app); //RealtimeDBに接続
