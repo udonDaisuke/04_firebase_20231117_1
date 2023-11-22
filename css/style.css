@@ -88,15 +88,15 @@ font-family: 'Neuton', serif;
 .head_btn {
 	color: black;
 	font-weight: bold;
-	font-size: 21px;
-	height: 100%;
+	font-size: 14px;
+	height: 80%;
 	width: 35%;
 	cursor: pointer;
-	line-height: 30px;
+	line-height: 26px;
 	text-align: center;
 	/* padding: 20px 5px; */
 	margin-top: 0px;
-	margin-right: 8px;
+	margin-right: 18px;
 	width: 30%;
 	background: rgba(223, 252, 164, 0.377);
 	border-radius: 6px;
@@ -429,8 +429,6 @@ a {
 	transform: scale(-1);
 
 }
-.width-bar::before {
-}
 
 .viewer.active {
 	display: block;
@@ -531,7 +529,7 @@ span {
 	font-weight: bold;
 	position: absolute;
 	top: 55px;
-	
+	z-index: 9999;
 	border-radius: 10%;
 	height: 15px;
 	line-height: 16px;	
@@ -544,13 +542,16 @@ span {
 }
 /* button help*/
 #hb0_help {
-left: 55%;
+	left: 55%;
+	top: 20%;
 } 
 #hb1_help {
 	left: 70%;
+	height: 30px;
 } 
 #hb2_help {
 	left: 82%;
+	top: 20%;
 } 
 #hb3_help {
 	left: 93%;

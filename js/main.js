@@ -1,4 +1,3 @@
-    import {userInput} from "./start.js" 
     // Import the functions you need from the SDKs you need
     import { initializeApp } from "https://www.gstatic.com/firebasejs/9.1.0/firebase-app.js";
     import { getDatabase, ref, push, set, onChildAdded, remove, onChildRemoved }
@@ -9,11 +8,10 @@
     let app = initializeApp(firebaseConfig);
     let db = getDatabase(app); //RealtimeDBに接続
     // const dbRef = ref(db, "memolink_"); //RealtimeDB内の"chat"を使う
-    const fbsrc = prompt("Please type document name","")
+    let fbsrc = prompt("Please type document name","")
     if(fbsrc===null){location.reload()}
     if(fbsrc==""){fbsrc="Trial_this can be refleshed by someone"}
     $("#dbname").text(`DBName: "${fbsrc}"`)
-    console.log("start",fbsrc)
     let dbRef = ref(db, "memolink_"+String(fbsrc))
     console.log("end",fbsrc)
 $(".title").on("dblclick",function(e){
@@ -21,24 +19,6 @@ $(".title").on("dblclick",function(e){
         ApplyTimeZoneColor(0)
     }    
 })
-// // ****************************************
-// // *      change document
-// // ****************************************
-// $("#setbtn").on("click",function(e){
-//     if(this == e.target){
-//         let groupname = $("#initialinp1").val()
-//         let pass = $("#initialinp2").val()
-//         console.log("clicked",groupname+"_"+pass)
-//         console.log("cbcheck0",dbRef)
-//         let app = initializeApp(firebaseConfig);
-//         let db = getDatabase(app); //RealtimeDBに接続
-//         // const dbRef = ref(db, "memolink_"); //RealtimeDB内の"chat"を使う
-    
-//          dbRef = ref(db, "memolink"); //RealtimeDB内切り替え
-//         console.log("cbcheck1",dbRef) 
-//     }
-// })
-
 
 // ****************************************
 // *      ADD_NEW_CARD  : click "+"
@@ -67,13 +47,10 @@ $("#hb0").on("click",function(e){
 // ****************************************
 let active_edit_el = "";
 $(document).on("dblclick",".label>p.default-text, .lwr>p",function(e){
-    console.log("dbl:",this,e);
     if(e.target == this && active_edit_el == ""){
         active_edit_el = $(this).parent();
         let initial_text = $(this).text()
         if (initial_text =="No_title"){initial_text=""}
-        console.log("object",initial_text);
-        console.log("active",active_edit_el);
 
         if($(this).parent().attr("class") == "label"){
             let html = `
@@ -108,7 +85,6 @@ $(document).on("dblclick",".label>p.default-text, .lwr>p",function(e){
             //thisをセレクタにしないと他のtextも反応してしまう
             let add_el_1 = $(html_1).appendTo($(this).parent())
             let add_el_2 = $(html_2).appendTo($(this).parent())
-            console.log(add_el_1);
             // cancelation of layout overlapping
             let id = $(active_edit_el).attr("id").split("_")[2]
             let shift= 0
@@ -118,9 +94,6 @@ $(document).on("dblclick",".label>p.default-text, .lwr>p",function(e){
             $(add_el_1).css("top",`${shift}px`)
             $(add_el_2).css("display","block")
             $(add_el_2).css("top",`${shift+110}px`)
-            console.log(id,id>3)
-
-            // $(add_el).css("top","50%");
             $(add_el_1).focus();
 
         }else{
@@ -139,31 +112,16 @@ $("*").not(active_edit_el).on("click",function(e){
         let cardTitle = $(active_edit_el).find("textarea.text_tmp")
         let Item = $(active_edit_el).parent().find("textarea.text_tmp_1")
         let refUrl = $(active_edit_el).parent().find("textarea.text_tmp_2")
-        console.log("checker",cardTitle.length,"||",Item.length,"||",refUrl.length)
-        // console.log("text_edit_add_judge: ",e.target == this,active_edit_el != "");
-        // let textarea_tmp = $(active_edit_el).children("textarea")[0]
-        // let textarea_tmp_sub = $(active_edit_el).children("textarea")[1]
-
-        // console.log(test_title,"||",test_item,"||",test_url)
-
-        // let text_inner = $(textarea_tmp).val()
-        // if (text_inner == ""){text_inner="None"}
- 
-        // let ref_text = $(textarea_tmp_sub).val()
-        // if (ref_text === undefined){ref_text=""}
         
         if(cardTitle.length >= 1){       
             // * label text update
             let text_inner = $(cardTitle).val()
-            console.log(text_inner,"||",$(cardTitle))
             if (text_inner == ""){text_inner="No_title"}
 
             let mode = "UPDATE_CARD_ITEM_LABEL"
-            console.log("swss",$(active_edit_el))
             if($(active_edit_el).attr("class")=="label"){
                 let id_card = $(active_edit_el).attr("id").split("_")[1]
                 let info = [id_card,text_inner]
-                console.log("infooo",info)
                 let send_object = {
                     addmode:mode,
                     addinfo:info,
@@ -180,14 +138,12 @@ $("*").not(active_edit_el).on("click",function(e){
             if (ref_text === undefined){ref_text=""}
 
             let mode = "UPDATE_CARD_ITEM_DETAILS"
-            console.log("passs",$(active_edit_el).children());
             $(active_edit_el).children(".reflink").remove()
             $(active_edit_el).children(".option-list").remove()
             $(active_edit_el).find(".help").remove()
 
             let id_item = $(active_edit_el).children("p").attr("id").split("_")
             let info = [id_item,text_inner,ref_text] 
-            console.log("id",  id_item)
             let send_object = {
                 // room:"",
                 // postby:"",
@@ -197,20 +153,6 @@ $("*").not(active_edit_el).on("click",function(e){
                 }
             fbDataSend(mode,send_object)
         
-            // let html = `
-            //     <p class = "reflink" ">LINK</p>
-            //     <div class="option-list">
-            //         <p class="option-label">Open as</p>
-            //         <p class="option">
-            //             <a class = "ref_url" href="${ref_text}" target="_blank" rel="noopener noreferrer">New Tab</a>
-            //         </p>
-            //         <p class="option ex">preview in app</p>
-            //         <p class="option">✖ CLOSE</p>
-            //     </div>
-            // `;
-            // if($(active_edit_el).attr("class")=="lwr"){
-            //     $(active_edit_el).append(html)
-            // }   
         }else{
             $(active_edit_el).children(".reflink").remove()
             $(active_edit_el).children(".option-list").remove()
@@ -220,7 +162,6 @@ $("*").not(active_edit_el).on("click",function(e){
         $(cardTitle).remove();
         $(Item).remove()
         $(refUrl).remove()
-        console.log(cardTitle)
         active_edit_el="";
     }    
 });
@@ -232,12 +173,8 @@ $("*").not(active_edit_el).on("click",function(e){
 let active_option_el = "";
 let option_click_stat = false
 $(document).on("click",".reflink", function(e){
-    console.log("click_option_active: ",active_option_el);
-
     // ! stop default action
-    // e.preventDefault()
     let optiondiv = $(this).next()
-    console.log(optiondiv,$(optiondiv).attr("class"));
     if($(optiondiv).hasClass("active")==true){
         $(optiondiv).removeClass("active")
     }else{
@@ -286,8 +223,6 @@ $(document).on("click", ".option.ex",function(e){
 $(document).on("click", ".viewer-close",function(e){
     console.log($(close),this);
     $(".viewer").attr("src","")
-    // $(".viewer").attr("title","reference view")
-    // $(".viewer").addClass("active")
     $(".viewer, .viewer-close , .width-bar").fadeOut(600)
     $(".viewer").attr("src","")
 });
@@ -298,10 +233,7 @@ $(document).on("click", ".viewer-close",function(e){
 $(".width-bar").change(function(){
     let ratio = $(".width-bar").val()
     let current_width = $(".width-bar").css("width")
-    console.log("ratio:current_width:",ratio, current_width);
-    console.log("calc width:",`calc(${ratio} * ${current_width})`);
     $(".viewer").css("width",`calc(${ratio} * ${current_width})`) 
-    // $(".viewer").css()
 });
 
 
@@ -310,7 +242,6 @@ $(".width-bar").change(function(){
 // ****************************************
 $(document).on("click",".option", function(e){
     e.stopImmediatePropagation()
-    console.log("ssssss",e);
     $(".option-list").hasClass("active")
     $(".option-list").removeClass("active")
 });
@@ -321,11 +252,8 @@ $(document).on("click",".option", function(e){
 $(document).on("click",".add-item", function(e){
     let thisCard = $(e.target).parent().parent()
     let counter = $(thisCard).find(".counter")
-    console.log("otyaa",thisCard)
     let id_card = $(thisCard).attr("id").split("_")[1]
     let id_item = String(updateCounter(thisCard,".lwr"))
-   
-    console.log("+++",thisCard,id_card,id_item)
     let targets = $(this).parent().prevAll(".lwr")
     $(targets).css("display","flex")
     let targetdiv = $(e.target).parent()
@@ -342,8 +270,6 @@ $(document).on("click",".add-item", function(e){
 
     toggleItemList(thisCard,"show")       
     fbDataSend(mode,send_object)
-
-    // $(thisCard).find(".lwr").css("display","flex")
 
 });
 
@@ -362,7 +288,6 @@ $(document).on("click",".item_name",function(e){
     if($(e.target).attr("class") == "item_name"){
         let cardid = $(e.target).prev("p").text() 
         let targetcard = "#card_"+cardid
-        console.log($(targetcard))
 
         $(window).scrollTop($(targetcard).offset().top-100)
     }
@@ -372,8 +297,20 @@ $(document).on("click",".item_name",function(e){
 // ****************************************
 $("#hb2").on("click",function(e){
     if(e.target ==this){
-        $("span.help").slideToggle(300)
+        let chk = ""
+        for(let jqobj of $("span")){
+            console.log("first",jqobj)
+                chk = $(jqobj).attr("style")
+                break
+            }
+            console.log(chk,chk=="")
+        if(chk==undefined ||chk ==""){
+            $("span.help").attr("style","display:flex")
+        }else{
+            $("span.help").attr("style","")
+        }
     };
+
 });
 
 // ****************************************
@@ -381,20 +318,17 @@ $("#hb2").on("click",function(e){
 // ****************************************
 $(document).on("click",".expand", function(e){
     ListUpCards()
-    console.log($(this).parent().nextAll(".lwr"));
     let thisCard = $(this).parent().parent()
     toggleItemList(thisCard)   
 });
 
 function toggleItemList(card,mode="toggle",cssDisplayTo="flex"){
-    console.log($(card).parent().nextAll(".lwr"));
     let targets = $(card).find(".lwr")
     let btn = $(card).find(".expand")[0]
     switch(mode) {
         //  ***********
         case "show" :
         //  ***********
-        console.log("SHOWWWWW")
         for (let target of targets) {
             if ($(target).attr("style","display")=="none") {
                 $(target).attr("style","")
@@ -406,7 +340,6 @@ function toggleItemList(card,mode="toggle",cssDisplayTo="flex"){
         // *********** 
         case "toggle" :
         // *********** 
-        console.log("TOGGGGG")
         $(targets).slideToggle(100)
             if($(btn).text()=="▶"){
                 $(btn).text("▼")
@@ -437,26 +370,17 @@ function addItem(target_div){
     let parent = $(target_div).parent()
     let counter = $(parent).find(".counter")
     $(parent).find(".lwr").css("display","flex")
-
-    console.log("added_item: ",item," | target: ",target_div);
 }
 
 function removeItem(target_div){
     let item = $(target_div).parent();
     $(item).remove(target_div)
-    console.log("deleted_item: ",target_div);
-
 };
 
 function updateCounter(parent, selector,counter="", ){
     let count = $(parent).children(selector).length;
-    console.log("counter_info",parent,selector,$(parent).children(selector),$(parent).children(selector).length);
-
     if(count > 0 && counter !=""){
-        console.log($(counter).text());
-        console.log("sssssssssssssssssssssssss",$("#extend_3_help").text())
         $(counter).text(`(${count}items)`)
-        console.log("sssssssssssssssssssssssss2",$("#extend_3_help").text())
 
     }else{
         return count
@@ -478,7 +402,6 @@ function ApplyTimeZoneColor(z_inp=""){
     let now =new Date()
     let hour = now.getHours()
     let zone = Math.floor(hour/6)
-    console.log("timecheck",hour,zone)
     if(z_inp=""){zone=z_inp}
     $("body").removeClass(`z0`)
     $("body").removeClass(`z1`)
@@ -486,7 +409,6 @@ function ApplyTimeZoneColor(z_inp=""){
     $("body").removeClass(`z3`)
 
     if (zone==0 || zone==3){
-
         $("body").addClass(`z${zone}`)
     }
 }
@@ -534,13 +456,11 @@ onChildAdded(dbRef, function(data){
 
     const mode = data.val().addmode;
     ApplyTimeZoneColor()
-    console.log("dddd",data.val())
     switch(mode){
         // *****************
         case "ADD_NEW_CARD":
         // *****************
             var id_card = data.val().addinfo
-            console.log(id_card,data.addinfo)
             let html = `
                 <div id = "card_${id_card}" class="card">
                     <span class="help" id ="card_${id_card}_help">→Click*2&nbsp;to&nbsp;edit</span>
@@ -572,22 +492,16 @@ onChildAdded(dbRef, function(data){
         // ***************************
             var id_card = data.val().addinfo[0]
             let text_inner = data.val().addinfo[1]
-            console.log("eee1", $(`#lbltext_${id_card}`))
             $(`#lbltext_${id_card}`).text(text_inner)
-            console.log(mode)
             break;
             
         // ***************************
         case "UPDATE_CARD_ITEM_DETAILS":
         // ***************************
-            console.log(mode)
-            console.log("onchange",data.val().addinfo[1])
             var id_card = data.val().addinfo[0][1]
             var id_item = data.val().addinfo[0][2]
             let text_in = data.val().addinfo[1]
             let ref_text = data.val().addinfo[2]
-
-            console.log("eee2", $(`#lwrtext_${id_card}_${id_item}`))
             $(`#lwrtext_${id_card}_${id_item}`).text(text_in)
 
             // initialize \
@@ -622,7 +536,6 @@ onChildAdded(dbRef, function(data){
             <span class="help ed2" id ="item_${id_card}_${id_item}_help">*Editable</span>
         </div>
         `
-        console.log(id_card,id_item, $(`#card_${id_card}`))
         $(`#card_${id_card}`).find(".add-item").before(html3) 
         // $(target_div).prev("div").append(html)
         let card=$(`#card_${id_card}`)
