@@ -1,14 +1,55 @@
+    import {userInput} from "./start.js" 
+    // Import the functions you need from the SDKs you need
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/9.1.0/firebase-app.js";
+    import { getDatabase, ref, push, set, onChildAdded, remove, onChildRemoved }
+        from "https://www.gstatic.com/firebasejs/9.1.0/firebase-database.js";
+    // Your web app's Firebase configuration
+    import {firebaseConfig} from "../setting/firebase_api.js"
+    // Initialize Firebase
+    let app = initializeApp(firebaseConfig);
+    let db = getDatabase(app); //RealtimeDBに接続
+    // const dbRef = ref(db, "memolink_"); //RealtimeDB内の"chat"を使う
+    const fbsrc = prompt("Please type document name","")
+    if(fbsrc===null){location.reload()}
+    if(fbsrc==""){fbsrc="Trial_this can be refleshed by someone"}
+    $("#dbname").text(`DBName: "${fbsrc}"`)
+    console.log("start",fbsrc)
+    let dbRef = ref(db, "memolink_"+String(fbsrc))
+    console.log("end",fbsrc)
+$(".title").on("dblclick",function(e){
+    if(this == e.target){
+        ApplyTimeZoneColor(0)
+    }    
+})
+// // ****************************************
+// // *      change document
+// // ****************************************
+// $("#setbtn").on("click",function(e){
+//     if(this == e.target){
+//         let groupname = $("#initialinp1").val()
+//         let pass = $("#initialinp2").val()
+//         console.log("clicked",groupname+"_"+pass)
+//         console.log("cbcheck0",dbRef)
+//         let app = initializeApp(firebaseConfig);
+//         let db = getDatabase(app); //RealtimeDBに接続
+//         // const dbRef = ref(db, "memolink_"); //RealtimeDB内の"chat"を使う
+    
+//          dbRef = ref(db, "memolink"); //RealtimeDB内切り替え
+//         console.log("cbcheck1",dbRef) 
+//     }
+// })
 
-console.log(window.dbRef)
 
 // ****************************************
 // *      ADD_NEW_CARD  : click "+"
 // ****************************************
 let id_card = 0
-$("#hb0").on("click",function(e){
 
+$("#hb0").on("click",function(e){
+    console.log(id_card)
+    let num_of_card =$(".card").length
     let mode = "ADD_NEW_CARD"
-    let info = id_card
+    let info = num_of_card+1
     let send_object = {
         // room:"",
         // postby:"",
@@ -25,18 +66,21 @@ $("#hb0").on("click",function(e){
 // *Edit_CARD_CONTENT  : double click on "p"
 // ****************************************
 let active_edit_el = "";
-$(document).on("dblclick",".label>p, .lwr>p",function(e){
+$(document).on("dblclick",".label>p.default-text, .lwr>p",function(e){
     console.log("dbl:",this,e);
     if(e.target == this && active_edit_el == ""){
         active_edit_el = $(this).parent();
         let initial_text = $(this).text()
+        if (initial_text =="No_title"){initial_text=""}
         console.log("object",initial_text);
         console.log("active",active_edit_el);
 
         if($(this).parent().attr("class") == "label"){
             let html = `
                 <textarea class="text_tmp" placeholder="set text" cols="30" rows="1">${initial_text}</textarea>
-            `
+                <span class="help" id ="text1_1_help">→Enter the title of topic</span>
+
+                `
             //thisをセレクタにしないと他のtextも反応してしまう
             let add_el = $(html).appendTo($(this).parent())
             $(add_el).css("top","30%");
@@ -48,22 +92,33 @@ $(document).on("dblclick",".label>p, .lwr>p",function(e){
             if(initial_text2==undefined){initial_text2=""}
             console.log("check",initial_text1,initial_text2,$(this).find(".option"));
             console.log("check",$(this).parent(),$(this).parent().find(".option"));
+            if (initial_text1 =="None"){initial_text1=""}
+            if (initial_text2 =="None"){initial_text2=""}
 
             let html_1 = `
                 <textarea class="text_tmp_1" placeholder="set Comment" cols="30" rows="4">${initial_text1}</textarea>
+                <span class="help" id ="text2_1_help">→Enter comment</span>
             `
             let html_2 = `
                 <textarea class="text_tmp_2" placeholder="set ref URL" cols="30" rows="2">${initial_text2}</textarea>
-            `
+                <span class="help" id ="text2_2_help">→drag&drop OK</span>
+
+                `
 
             //thisをセレクタにしないと他のtextも反応してしまう
             let add_el_1 = $(html_1).appendTo($(this).parent())
             let add_el_2 = $(html_2).appendTo($(this).parent())
             console.log(add_el_1);
+            // cancelation of layout overlapping
+            let id = $(active_edit_el).attr("id").split("_")[2]
+            let shift= 0
+            if(id>2){shift=-110}else{shift=0}
+
             $(add_el_1).css("display","block")
-            $(add_el_1).css("top","0px")
+            $(add_el_1).css("top",`${shift}px`)
             $(add_el_2).css("display","block")
-            $(add_el_2).css("top","110px")
+            $(add_el_2).css("top",`${shift+110}px`)
+            console.log(id,id>3)
 
             // $(add_el).css("top","50%");
             $(add_el_1).focus();
@@ -78,24 +133,33 @@ $(document).on("dblclick",".label>p, .lwr>p",function(e){
 // *REFRECT_CARD_CONTENT  : click out of ".card"
 // ****************************************
 $("*").not(active_edit_el).on("click",function(e){
-    console.log("text_edit_active: ",active_edit_el);
+    console.log("text_edit_active: ddddd",active_edit_el);
     if(e.target == this && active_edit_el != ""){
-        console.log("text_edit_add_jufge: ",e.target == this,active_edit_el != "");
-        let textarea_tmp = $(active_edit_el).children("textarea")[0]
-        let textarea_tmp_sub = $(active_edit_el).children("textarea")[1]
+        // get textarea length = 0 or 1
+        let cardTitle = $(active_edit_el).find("textarea.text_tmp")
+        let Item = $(active_edit_el).parent().find("textarea.text_tmp_1")
+        let refUrl = $(active_edit_el).parent().find("textarea.text_tmp_2")
+        console.log("checker",cardTitle.length,"||",Item.length,"||",refUrl.length)
+        // console.log("text_edit_add_judge: ",e.target == this,active_edit_el != "");
+        // let textarea_tmp = $(active_edit_el).children("textarea")[0]
+        // let textarea_tmp_sub = $(active_edit_el).children("textarea")[1]
 
-        let text_inner = $(textarea_tmp).val()
-        if (text_inner == ""){text_inner="None"}
+        // console.log(test_title,"||",test_item,"||",test_url)
+
+        // let text_inner = $(textarea_tmp).val()
+        // if (text_inner == ""){text_inner="None"}
  
-        let ref_text = $(textarea_tmp_sub).val()
-        if (ref_text === undefined){ref_text=""}
-        console.log("text",text_inner,text_inner.length,ref_text,ref_text.length);
+        // let ref_text = $(textarea_tmp_sub).val()
+        // if (ref_text === undefined){ref_text=""}
         
-        if(text_inner.length >= 1){   
+        if(cardTitle.length >= 1){       
             // * label text update
+            let text_inner = $(cardTitle).val()
+            console.log(text_inner,"||",$(cardTitle))
+            if (text_inner == ""){text_inner="No_title"}
+
             let mode = "UPDATE_CARD_ITEM_LABEL"
             console.log("swss",$(active_edit_el))
-            // let id_card = $(active_edit_el).children("p").attr("id").split("_")[1]
             if($(active_edit_el).attr("class")=="label"){
                 let id_card = $(active_edit_el).attr("id").split("_")[1]
                 let info = [id_card,text_inner]
@@ -108,13 +172,19 @@ $("*").not(active_edit_el).on("click",function(e){
                 fbDataSend(mode,send_object)
             }
         }
-        if(ref_text.length >=1){
+        if(Item.length >=1 || refUrl.length >=1){
             // * lwr text+link update
-            let mode = "UPDATE_CARD_ITEM_DETAILS"
+            let text_inner = $(Item).val()
+            if (text_inner == ""){text_inner="None"}
+            let ref_text = $(refUrl).val()
+            if (ref_text === undefined){ref_text=""}
 
+            let mode = "UPDATE_CARD_ITEM_DETAILS"
             console.log("passs",$(active_edit_el).children());
             $(active_edit_el).children(".reflink").remove()
             $(active_edit_el).children(".option-list").remove()
+            $(active_edit_el).find(".help").remove()
+
             let id_item = $(active_edit_el).children("p").attr("id").split("_")
             let info = [id_item,text_inner,ref_text] 
             console.log("id",  id_item)
@@ -144,12 +214,13 @@ $("*").not(active_edit_el).on("click",function(e){
         }else{
             $(active_edit_el).children(".reflink").remove()
             $(active_edit_el).children(".option-list").remove()
+            $(active_edit_el).find(".help").remove()
 
         };
-        $(textarea_tmp).remove();
-        $(textarea_tmp_sub).remove()
-
-        console.log("test",textarea_tmp,textarea_tmp_sub);
+        $(cardTitle).remove();
+        $(Item).remove()
+        $(refUrl).remove()
+        console.log(cardTitle)
         active_edit_el="";
     }    
 });
@@ -181,6 +252,21 @@ $(document).on("click",".reflink", function(e){
 
 });
 
+// ****************************************
+// *Clear all : click*2 
+// ****************************************
+$("#hb3").on("dblclick",function(e){
+    if(this == e.target){
+        const answer = confirm("Are you sure to clear all?")
+        if(answer){
+            remove(dbRef)
+            location.href = "../index.html";
+        }
+        else{
+            alert("Canceled")
+        }
+    }
+})
 
 // ****************************************
 // *OPEN IFRAME viewer  : click 
@@ -188,7 +274,7 @@ $(document).on("click",".reflink", function(e){
 $(document).on("click", ".option.ex",function(e){
     let ref_url = $(this).prev().children("a").attr("href")
     console.log($(this),ref_url);
-    $(".viewer").attr("src",ref_url)
+    $(".viewer").attr("src",iframeUrlConvert(ref_url))
     // $(".viewer").attr("title","reference view")
     // $(".viewer").addClass("active")
     $(".viewer, .viewer-close, .width-bar").fadeIn(600)
@@ -230,15 +316,16 @@ $(document).on("click",".option", function(e){
 });
 
 // ****************************************
-// *ADD_CARD_ITEM : click "+"
+// *ADD_CARD_ITEM : click "+New CARD"
 // ****************************************
 $(document).on("click",".add-item", function(e){
-    let parent2 = $(e.target).parent().parent()
-    console.log("otyaa",parent2)
-    let id_card = $(parent2).attr("id").split("_")[1]
-    let id_item = String(updateCounter(parent2,".lwr"))
+    let thisCard = $(e.target).parent().parent()
+    let counter = $(thisCard).find(".counter")
+    console.log("otyaa",thisCard)
+    let id_card = $(thisCard).attr("id").split("_")[1]
+    let id_item = String(updateCounter(thisCard,".lwr"))
    
-    console.log("+++",parent2,id_card,id_item)
+    console.log("+++",thisCard,id_card,id_item)
     let targets = $(this).parent().prevAll(".lwr")
     $(targets).css("display","flex")
     let targetdiv = $(e.target).parent()
@@ -252,39 +339,85 @@ $(document).on("click",".add-item", function(e){
         addinfo:info,
         // comment:""
         }
+
+    toggleItemList(thisCard,"show")       
     fbDataSend(mode,send_object)
 
+    // $(thisCard).find(".lwr").css("display","flex")
 
-    // let html =`
-    //     <div class="lwr">
-    //         <p class="default-text">None</p>
-    //     </div>
-    //     ` 
-    // // $(target_div).prev("div").append(html)
-    // let item = $(html).insertBefore($(target_div))
-    // let parent = $(target_div).parent()
-    // let counter = $(parent).find(".counter")
-    $(parent).find(".lwr").css("display","flex")
-    updateCounter(parent,".lwr",counter)
+});
 
-    console.log("added_item: ",item," | target: ",target_div);
+// ****************************************
+// *Show/Hide_CARD : click "Show/Hide"
+// ****************************************
+$("#hb1").on("click",function(e){
+    if(e.target ==this){
+        ListUpCards()
+        $("#cardlistview").toggle(300)
+    };
+});
 
+$(document).on("click",".item_name",function(e){
+
+    if($(e.target).attr("class") == "item_name"){
+        let cardid = $(e.target).prev("p").text() 
+        let targetcard = "#card_"+cardid
+        console.log($(targetcard))
+
+        $(window).scrollTop($(targetcard).offset().top-100)
+    }
+});
+// ****************************************
+// *Show Help comment : click "Help"
+// ****************************************
+$("#hb2").on("click",function(e){
+    if(e.target ==this){
+        $("span.help").slideToggle(300)
+    };
 });
 
 // ****************************************
 // *OPEN/CLOSE EXPANDER: click "▲, ▼"
 // ****************************************
 $(document).on("click",".expand", function(e){
+    ListUpCards()
     console.log($(this).parent().nextAll(".lwr"));
-    let targets = $(this).parent().nextAll(".lwr")
-    $(targets).slideToggle(100)
-    if($(this).text()=="▶"){
-        $(this).text("▼")
-    }else{
-        $(this).text("▶")
-    }    
+    let thisCard = $(this).parent().parent()
+    toggleItemList(thisCard)   
 });
 
+function toggleItemList(card,mode="toggle",cssDisplayTo="flex"){
+    console.log($(card).parent().nextAll(".lwr"));
+    let targets = $(card).find(".lwr")
+    let btn = $(card).find(".expand")[0]
+    switch(mode) {
+        //  ***********
+        case "show" :
+        //  ***********
+        console.log("SHOWWWWW")
+        for (let target of targets) {
+            if ($(target).attr("style","display")=="none") {
+                $(target).attr("style","")
+            }        
+            $(btn).text("▶")
+        }
+        break;  
+
+        // *********** 
+        case "toggle" :
+        // *********** 
+        console.log("TOGGGGG")
+        $(targets).slideToggle(100)
+            if($(btn).text()=="▶"){
+                $(btn).text("▼")
+            }else{
+                $(btn).text("▶")
+            }
+        break;  
+
+    };
+
+}
 
 // ?****************************************
 // ****************************************
@@ -321,10 +454,60 @@ function updateCounter(parent, selector,counter="", ){
 
     if(count > 0 && counter !=""){
         console.log($(counter).text());
+        console.log("sssssssssssssssssssssssss",$("#extend_3_help").text())
         $(counter).text(`(${count}items)`)
+        console.log("sssssssssssssssssssssssss2",$("#extend_3_help").text())
+
     }else{
         return count
     }
+}
+
+function iframeUrlConvert(str){
+// https://www.youtube.com/watch?v=*********
+//  => https://www.youtube.com/embed/*********
+    let str_separated = str.split("https://www.youtube.com/watch?v=")
+    if (str_separated.length ==2){
+        return `https://www.youtube.com/embed/${str_separated[1]}`
+    }else{
+        return str
+    }
+}
+
+function ApplyTimeZoneColor(z_inp=""){
+    let now =new Date()
+    let hour = now.getHours()
+    let zone = Math.floor(hour/6)
+    console.log("timecheck",hour,zone)
+    if(z_inp=""){zone=z_inp}
+    $("body").removeClass(`z0`)
+    $("body").removeClass(`z1`)
+    $("body").removeClass(`z2`)
+    $("body").removeClass(`z3`)
+
+    if (zone==0 || zone==3){
+
+        $("body").addClass(`z${zone}`)
+    }
+}
+function ListUpCards(){
+    let cards = $(".card")
+    $("#card_list").children("li").remove()
+    // 配列風オブジェクトでFOREACHつかえないとき
+    for (const cardPicked of cards) {
+        const cardid = $(cardPicked).attr("id").split("_")[1]
+        const cardname = $(cardPicked).find(".label>p").text()
+        console.log(cardid,"||",cardname)
+        const html =`
+            <li class="cardinfo" id ="citem_${cardid}">
+                <p class="item_jump"></p>
+                <p class="item_id">${cardid}</p>
+                <p class="item_name">${cardname}</p>
+            </li>
+        `
+        $("#card_list").append(html)
+    }
+
 }
 // !**************************************************
 function fbDataSend(mode="",object={}){
@@ -341,13 +524,16 @@ function fbDataSend(mode="",object={}){
         comment:""
     }
     //firebase におくる 
-    const newPostRef = push(window.dbRef);
+    const newPostRef = push(dbRef);
     set(newPostRef,send_object);
     return true 
-};
+}
 
-onChildAdded(window.dbRef, function(data){
+onChildAdded(dbRef, function(data){
+    // $(".help").attr("style","d")
+
     const mode = data.val().addmode;
+    ApplyTimeZoneColor()
     console.log("dddd",data.val())
     switch(mode){
         // *****************
@@ -357,62 +543,74 @@ onChildAdded(window.dbRef, function(data){
             console.log(id_card,data.addinfo)
             let html = `
                 <div id = "card_${id_card}" class="card">
+                    <span class="help" id ="card_${id_card}_help">→Click*2&nbsp;to&nbsp;edit</span>
                     <div class="upr">
-                        <p class="default-text">UPR_FIG</p>
+                        <p class="default"></p>
                     </div>
                     <div id = "lavel_${id_card}" class="label">
-                        <p class="expand">▼</p>
+                        <p class="expand">▶</p>
                         <p id = "lbltext_${id_card}" class="default-text">No_title</p>
+                        <span class="help ed1" id ="title_${id_card}_help">*Editable</span>
+                        <span class="help expand" id ="expand_${id_card}_help">↓Epand/Shrink&nbsp;the&nbsp;item&nbsp;list</span>
                         <p class="counter">(1items)</p>
-
-                        </div>
+                    </div>
                     <div class="lwr" id = "lwr_${id_card}_0">
                         <p id = "lwrtext_${id_card}_0" class="default-text">None</p>
+                        <span class="help ed2" id ="item_${id_card}_0_help">*Editable</span>
                     </div>
                     <div class="add-item">
                         <p class="default-text">＋</p>
+                        <span class="help add" id ="add_item_${id_card}_0_help">Add&nbsp;item→</span>
                     </div>
                 </div>
             `
-            $(".main-area").append(html)
+            let add = $(html).appendTo($(".main-area"))
+            break;
+
         // ***************************
         case "UPDATE_CARD_ITEM_LABEL":
         // ***************************
             var id_card = data.val().addinfo[0]
             let text_inner = data.val().addinfo[1]
-            console.log("eee", $(`#lbltext_${id_card}`))
+            console.log("eee1", $(`#lbltext_${id_card}`))
             $(`#lbltext_${id_card}`).text(text_inner)
-        
+            console.log(mode)
+            break;
             
         // ***************************
         case "UPDATE_CARD_ITEM_DETAILS":
         // ***************************
-        console.log("onchange",data.val().addinfo[1])
+            console.log(mode)
+            console.log("onchange",data.val().addinfo[1])
             var id_card = data.val().addinfo[0][1]
             var id_item = data.val().addinfo[0][2]
             let text_in = data.val().addinfo[1]
             let ref_text = data.val().addinfo[2]
 
-            console.log("eee", $(`#lwrtext_${id_card}_${id_item}`))
+            console.log("eee2", $(`#lwrtext_${id_card}_${id_item}`))
             $(`#lwrtext_${id_card}_${id_item}`).text(text_in)
 
             // initialize \
             $(`#lwr_${id_card}_${id_item}`).children(".reflink").remove()
             $(`#lwr_${id_card}_${id_item}`).children(".option-list").remove()
             
-            let html2 = `
-                <p class = "reflink" ">LINK</p>
-                <div class="option-list">
-                    <p class="option-label">Open as</p>
-                    <p class="option">
-                        <a class = "ref_url" href="${ref_text}" target="_blank" rel="noopener noreferrer">New Tab</a>
-                    </p>
-                    <p class="option ex">preview in app</p>
-                    <p class="option">✖ CLOSE</p>
-                </div>
-            `;
-            $(`#lwr_${id_card}_${id_item}`).append(html2)
-            
+
+            if(ref_text != ""){
+                let html2 = `
+                    <p class = "reflink" ">LINK</p>
+                    <div class="option-list">
+                        <p class="option-label">Open as</p>
+                        <p class="option">
+                            <a class = "ref_url" href="${ref_text}" target="_blank" rel="noopener noreferrer">New Tab</a>
+                        </p>
+                        <p class="option ex">preview in app</p>
+                        <p class="option">✖ CLOSE</p>
+                    </div>
+                `;
+                $(`#lwr_${id_card}_${id_item}`).append(html2)
+            }
+            break;
+
         // ***********************
         case "ADD_NEW_ITEM":
         // ***********************
@@ -421,17 +619,23 @@ onChildAdded(window.dbRef, function(data){
         let html3 =`
         <div class="lwr" id = "lwr_${id_card}_${id_item}">
             <p id = "lwrtext_${id_card}_${id_item}" class="default-text">None</p>
+            <span class="help ed2" id ="item_${id_card}_${id_item}_help">*Editable</span>
         </div>
         `
+        console.log(id_card,id_item, $(`#card_${id_card}`))
         $(`#card_${id_card}`).find(".add-item").before(html3) 
-    // $(target_div).prev("div").append(html)
-    $(parent).find(".lwr").css("display","flex")
+        // $(target_div).prev("div").append(html)
+        let card=$(`#card_${id_card}`)
+        toggleItemList(card,"show")
+        // $(parent).find(".lwr").css("display","flex")
+        let counter = $(`#card_${id_card}`).find(".counter")
+        updateCounter(`#card_${id_card}`,".lwr",counter)
 
-        
-
+        break;
 
     }
  
 })
+
 
 

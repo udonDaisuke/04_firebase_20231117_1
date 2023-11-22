@@ -3,11 +3,14 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Document</title>
+    <title>Memolink</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Yomogi&display=swap" rel="stylesheet">
-
+    <link href="https://fonts.googleapis.com/css2?family=M+PLUS+1p&display=swap" rel="stylesheet">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=M+PLUS+1p&family=Neuton&display=swap" rel="stylesheet">
+    
     <!-- ! Style sheet -->
     <link rel="stylesheet" href="css/reset.css">
     <link rel="stylesheet" href="css/style.css">
@@ -22,44 +25,52 @@
 <body>
     <header>
         <div class="header-area">
+            <div class="head-title">
+                <p class="title">&nbsp;&nbsp;Memolink&nbsp;&nbsp;</p>
+            </div>
+                <p  id="dbname" ></p>
+
             <div class="head-btn-area">
-                <p class="head_btn" id = "hb0">+</p>
-                <p class="head_btn" id = "hb1">-</p>
-                <p class="head_btn" id = "hb2">x</p>
+                <p class="head_btn" id = "hb0">+New CARD
+                    <span class="help" id ="hb0_help">↑Add new card</span>
+                </p>
+                <p class="head_btn" id = "hb1">CARD List
+                    <span class="help" id ="hb1_help">↑change card visibility from a list</span>
+                </p>
+                <p class="head_btn" id = "hb2">Help
+                    <span class="help" id ="hb2_help">↑Hide help</span>
+                </p>
+                <p class="head_btn" id = "hb3">Clear ALL
+                    <span class="help" id ="hb3_help">↑Click*2 to execute</span>
+                </p>
             </div>
         </div>
     </header>
     <main>
         <div class="main-area">
             <div class="addtopic">
-                <p class="addtopic-text">Click x2</p>
+                <p class="addtopic-text"></p>
             </div>
             <iframe class="viewer" src="" ></iframe>
-            <p class="viewer-close">✖</p>
-            <input type="range" class="width-bar" min="0.2" max = "2" value="1" step ="0.1">
-
+            <p class="viewer-close">✖
+                <span class="help" id ="viewclose_help">→close</span>
+            </p>
+            <!-- <span class="help" id ="widthbar_help">→close</span> -->
+            <input type="range" class="width-bar" min="0.2" max = "2" value="1" step ="0.01">
+            <!-- vard list-->
+            <div id="cardlistview">
+                <p>CARD&nbsp;LIST&nbsp;&nbsp;click&nbsp;to&nbsp;focus</p>
+                <ul id="card_list"></ul>  
+            </div>
         </div>
             
     </main>
     <script  type="module">
-        // Import the functions you need from the SDKs you need
-        import { initializeApp } from "https://www.gstatic.com/firebasejs/9.1.0/firebase-app.js";
-        import { getDatabase, ref, push, set, onChildAdded, remove, onChildRemoved }
-            from "https://www.gstatic.com/firebasejs/9.1.0/firebase-database.js";
-        // Your web app's Firebase configuration
-        import {firebaseConfig} from "./setting/firebase_api.js"
-        console.log("dddd",firebaseConfig)
-        // Initialize Firebase
-        const app = initializeApp(firebaseConfig);
-        const db = getDatabase(app); //RealtimeDBに接続
-        const dbRef = ref(db, "memolink"); //RealtimeDB内の"chat"を使う
-        window.dbRef = dbRef; //Grobal化
-        window.push = push
-        window.set = set
-        window.onChildAdded = onChildAdded 
+
 
     </script>    <!-- <script src="js/firebase.js"></script> -->
     <!-- グローバルで参照指せるために type moduleg必要 -->
+    <script src="js/start.js" type="module"></script> 
     <script src="js/main.js" type="module"></script> 
 
 </body>
